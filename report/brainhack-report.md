@@ -22,7 +22,7 @@ author:
   affiliation: aff1
   corref: aff1
 
-url: http://github.com/sderygithub/clubs-of-science
+url: http://github.com/sderygithub/Clubs-of-Science
 
 coi: None
 

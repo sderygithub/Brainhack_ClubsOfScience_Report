@@ -1,31 +1,9 @@
 ## Brainhack Report ##
 
-To compile this paper you will need a to have a distribution of LaTex that includes bibtex and pdflatex tools as well as Pandoc installed on your local computer. If you have a PC, I am not sure how you install latex.
+### Clubs of Science ###
 
-On Mac:
-The installation of LaTex can be easily achieved on a Mac using the [mactex package](https://tug.org/mactex/). 
+The emergence of structure in interacting entities is a rich field of study and long been recognized as a defining characteristic of complex social networks. Scientific communities are not an exception to this observation. This short paper reports on the development of Python scripts for the **Automatic Extraction of Academic Collaborations in Neuroimaging**.
 
-For Ubuntu:
-    
-	sudo apt-get install texlive-full
+The tool can be accessed through a public website at [Clubs of Science](http://cos.dery.xyz).
 
-For Redhat/CentOS/Fedora (I believe that this will work):
-	
-	sudo yum install texlive
-
-The Brainhack Report is written in Markdown and then converted into LaTex using a Brainhack report template. To perform this step you will need to have Pandoc installed. This can be accomplished on a variety of operating systems using instructions from the [Installing Pandoc web page](http://pandoc.org/installing.html).
-
-If you have make installed you can compile the paper using:
-    
-    make
-
-Otherwise you will need to run the commands:
-    
-	pandoc -s -S -N --template brainhack-report-template.tex brainhack-report.md -o brainhack-report-formatted.tex
-	pdflatex brainhack-report-formatted.tex
-	bibtex brainhack-report-formatted
-	pdflatex brainhack-report-formatted.tex
-	pdflatex brainhack-report-formatted.tex
-
-The multiple runs makes sure that all references are resolved. If you do not 
-change the bib file you will not need to rerun the bibtex command.
+Notes on how to compile this paper can be found at [Brainhack-AMX](https://github.com/Brainhack-AMX/brainhack_reports)
