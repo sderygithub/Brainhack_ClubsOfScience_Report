@@ -1,46 +1,34 @@
 ---
-event: '2015 Brainhack Americas (MX)'
+event: '2015 Brainhack Montreal'
 
-title:  'Optimized implementations of voxel-wise degree centrality and local functional connectivity density mapping in AFNI'
-
-author:
-
-- initials: RCC
-  surname: Craddock
-  firstname: R. Cameron
-  email: ccraddock@nki.rfmh.org
-  affiliation: aff1, aff2
-  corref: aff1
-- initials: DJC
-  surname: Clark
-  firstname: Daniel J.
-  email: daniel.clark@childmind.org
-  affiliation: aff2
+title:  'Automatic Extraction of Academic Collaborations in Neuroimaging'
 
 affiliations: 
 
 - id: aff1
-  orgname: 'Computational Neuroimaging Lab, Center for Biomedical Imaging and Neuromodulation, Nathan Kline Institute for Psychiatric Research'
-  street: 140 Old Orangeburg Rd
-  postcode: 10962
-  city: Orangeburg
-  state: New York
-  country: USA
-- id: aff2
-  orgname: 'Center for the Developing Brain, Child Mind Institute'
-  street: 445 Park Ave
-  postcode: 10022
-  city: New York
-  state: New York
-  country: USA
+  orgname: 'Montreal Neurological Institute, McGill University'
+  street: 3801 University Street
+  postcode: H3A 2B4
+  city: Montreal
+  state: QC
+  country: Canada
 
-url: http://github.com/ccraddock/afni
+author:
+
+- initials: SD
+  surname: Dery
+  firstname: Sebastien
+  email: sebastien.dery@mail.mcgill.ca
+  affiliation: aff1
+  corref: aff1
+
+url: http://github.com/sderygithub/clubs-of-science
 
 coi: None
 
-acknow: The authors would like to thank the organizers and attendees of Brainhack MX and the developers of AFNI. This project was funded in part by a Educational Research Grant from Amazon Web Services.
+acknow: The authors would like to thank the organizers and attendees of Brainhack Montreal.
 
-contrib: RCC and DJC wrote the software, DJC performed tests, and DJC and RCC wrote the report.
+contrib: SD wrote the software, performed tests, and wrote the report.
   
 bibliography: brainhack-report
 
@@ -48,45 +36,46 @@ gigascience-ref: REFXXX
 ...
 
 #Introduction
-Degree centrality (DC) \cite{Rubinov2010} and local functional connectivity density (lFCD) \cite{Tomasi2010} are statistics calculated from brain connectivity graphs that measure how important a brain region is to the graph. DC (a.k.a. global functional connectivity density \cite{Tomasi2010}) is calculated as the number of connections a region has with the rest of the brain (binary DC), or the sum of weights for those connections (weighted DC) \cite{Rubinov2010}. lFCD was developed to be a surrogate measure of DC that is faster to calculate by restricting its computation to regions that are spatially adjacent \cite{Tomasi2010}. Although both of these measures are popular for investigating inter-individual variation in brain connectivity, efficient neuroimaging tools for computing them are scarce. The goal of this Brainhack project was to contribute optimized implementations of these algorithms to the widely used, open source, AFNI software package \cite{Cox1996}.
+Our ability to quantitatively study large-scale social and behavioural phenomena such as peer influence and confirmation bias within scientific circles rest on quality and relevant data \cite{BiologicalNetworks:Freeman2004}. Yet the compilation of specific coauthorship databases are often restricted to certain well-defined fields of study or publication resources, limiting the extent and depth by which investigations can be performed. Ultimately, we aim to understand how the social construct and its underlying dynamics influence the trajectories of scientific endeavours \cite{Sarigol2014:PredictingSuccess}. This work is motivated by an interest in observing social patterns, monitoring their evolution, and possibly understanding the emergence and spreading of ideas and their biases in the neuroimaging community; central themes to deciphering facts from opinions. However, before being able to fully investigate and address these fundamental and inherently complex questions, we need to address the extraction and validation of data. The goal of this project was to leverage publicly available information on Google Scholar (GS) to  automaticaly extract coauthorship networks. 
 
 #Approach
-Tools for calculating DC (\texttt{3dDegreeCentrality}) and lFCD (\texttt{3dLFCD}) were implemented by modifying the C source code of AFNI's \texttt{3dAutoTcorrelate} tool. \texttt{3dAutoTcorrelate} calculates the voxel $\times$ voxel correlation matrix for a dataset and includes most of the functionality we require, including support for OpenMP \cite{Dagum1998} multithreading to improve calculation time, the ability to restrict the calculation using a user-supplied or auto-calculated mask, and support for both Pearson's and Spearman correlation.
+The tool can be accessed through a public website at (http://cos.dery.xyz). The site is constructed using a set of openly accessible libraries allowing the display of coauthorship networks as interactive graphs \cite{Holten2009:ForceDirected}. Visitors can peruse a set of pre-computed networks extracted using custom Python scripts designed to crawl GS based on a set of predefined constraints (e.g. search topic, publication journal). The proposed interface offers seamless manipulation to keep interaction straightforward and easy to use. The simplicity of the design aims to reach a maximum number of users, assuming a minimal level of technical knowledge. 
 
-##### \texttt{3dDegreeCentrality}:
-Calculating DC is straight forward and is quick when a correlation threshold or is used. In this scenario, each of the $.5*N_{vox}*(N_{vox}-1)$ unique correlations are calculated, and if they exceed a user specified threshold (default threshold = 0.0) the binary and weighted DC value for each of the voxels involved in the calculation are incremented. The procedure is more tricky if sparsity thresholding is used, where the top $P\%$ of connections are included in the calculation. This requires that a large number of the connections be retained and ranked - consuming substantial memory and computation. We optimize this procedure with a histogram and adaptive thresholding. If a correlation exceeds threshold it is added to a 50-bin histogram (array of linked lists). If it is determined that the lowest bin of the histogram is not needed to meet the sparsity goal, the threshold is increased by the bin-width and the bin is discarded. Once all of the correlations have been calculated, the histogram is traversed from high to low, incorporating connections into binary and weighted DC until a bin is encountered that would push the number of retained connections over the desired sparsity. This bin's values are sorted into a 100-bin histogram that is likewise traversed until the sparsity threshold is met or exceeded. Sparsity is exceeded when the differences between correlation values are less than $1.0/(50*100)$.
+##### \texttt{GraphConstruction}:
+Scholarly citations are commonly found in standardized format, suggesting the structure can be reliably used within an automatic procedure. Moreover, while the result of typical search engines are not structured towards data mining (i.e. mixture of natural language embedded in semi-structured tags and page links), particular combinations of HTML tags and CSS identifiers can be leveraged to extract specific information. This simple scheme allows the reconstruction of large-scale networks of collaborations. Interestingly, Google Scholar also hosts individual pages for authors’ rich with pre-computed metrics of scientific productivity and impact (e.g. cumulative number of citations, h-index, i10-index). This data can be further exploited to structure and highlight part of the network.
+
+##### \texttt{CommunityDetection}:
+Scientific communities were detected using a greedy agglomerative modularity optimization process \cite{Blondel08fastunfolding}. 
 
 \begin{table*}[t!]
-\caption{\label{stattable}Comparison of the time and memory required by the C-PAC and AFNI implementations to calculate DC (sparsity and correlation threshold) and lFCD on the first resting state scan of the first scanning session for all 36 participants' data in the IBATRT dataset. Values are averaged across the 36 datasets and presented along with standard deviations in parenthesis.}
-\begin{tabular}{l l l l l l l l}
- \hline\noalign{\smallskip}
-          &            & \multicolumn{2}{c}{DC $\rho \geq 0.6$} & \multicolumn{2}{c}{DC $0.1\%$ Sparsity} & \multicolumn{2}{c}{lFCD $\rho \geq 0.6$} \\
-  Method  & Number of Threads & Time (s)       & Mem (GB)            & Time (s)       & Mem (GB)            & Time (s)       & Mem (GB) \\
-    \hline\noalign{\smallskip}
-  C-PAC   & 1          & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)  \\
-  AFNI    & 2          & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)  \\
-  AFNI    & 4          & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)  \\
-  AFNI    & 8          & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)             & 360 (15)       & 6.2(70)  \\
-  \noalign{\smallskip}\hline
+\centering
+\caption{\label{stattable}Completeness study: accuracy between the faculty roster of five major neuroimaging institutes and the neuroimaging network.}
+\begin{tabular}{rccccc}
+\hline
+\multicolumn{1}{c}{\textbf{Institute}} & \textbf{\begin{tabular}[c]{@{}c@{}}Total Count\end{tabular}} & \textbf{Recovered} & \textbf{\begin{tabular}[c]{@{}c@{}}On Google Scholar\end{tabular}} & \textbf{Accuracy} & \textbf{\begin{tabular}[c]{@{}c@{}}Corrected Accuracy\end{tabular}} \\ \hline
+\begin{tabular}[c]{@{}r@{}}McConnell Brain Imaging Center\\ (Montreal Neurological Institute)\end{tabular} & 12 & 7 & 9 & 58.33\% & 77.77\% \\
+\begin{tabular}[c]{@{}r@{}}Martinos Center for Biomedical Imaging\\ (Harvard University)\end{tabular} & 39 & 12 & 22 & 30.76\% & 54.54\% \\
+\begin{tabular}[c]{@{}r@{}}Cognitive-Neuroimaging Unit\\ (INSERM-CEA, France)\end{tabular} & 15 & 7 & 8 & 46.66\% & 87.50\% \\
+\begin{tabular}[c]{@{}r@{}}Wellcome Trust Center for Neuroimaging\\ (University College London)\end{tabular} & 16 & 10 & 11 & 62.50\% & 90.90\% \\
+\begin{tabular}[c]{@{}r@{}}FMRIB\\ (Oxford University)\end{tabular} & 17 & 8 & 11 & 47.05\% & 72.72\% \\ \hline
+Totals & 99 & 44 & 61 & 49.06\% & 76.69\% \\ \hline
 \end{tabular}
 \end{table*}
 
-##### \texttt{3dLFCD}:
-lFCD was calculating using a region growing algorithm in which face-, side-, and corner-touching voxels are iteratively added to the cluster if their correlation with the target voxel exceeds a threshold (default threshold = 0.0). Although lFCD was originally defined as the number of voxels locally connected to the target, we also included a weighted version.
-
 ##### Validation:
-Outputs from the newly developed tools were benchmarked to Python implementations of these measures from the Configurable Pipeline for the Analysis of Connectomes (C-PAC) \cite{Craddock2013c} using in the publically shared \href{http://fcon_1000.projects.nitrc.org/indi/CoRR/html/ibatrt.html}{Intrinsic Brain Activity Test-Retest (IBATRT) dataset} from the Consortium for Reliability and Reproduciblity\cite{Zuo2014}.
+To assess the recovered network’s reliability we performed a spot check on its content. First we examined the accuracy of 100 randomly selected researchers from the network and sought after their departmental affiliation and publication journals to confirm their belongin to the broad field of neuroimaging. The dependence on profiles availability injects a strong negative bias. To better appreciate the crawling ability to construct network we further compare with the number of members having a Google Scholar page in the form of a corrected accuracy.
 
-#Results
-AFNI tools were developed for calculating lFCD and DC from functional neuroimaging data and have been submitted for inclusion into AFNI. LFCD and DC maps from the test dataset (illustrated in Fig. \ref{centfig}) are identical to those calculated using C-PAC but required substantially less time and memory (see Table \ref{stattable}).
+# Results
+96 researchers were confirmed to have direct institutional affiliation to neuroscience, psychology, or biomedical engineering departments. The remaining 4 randomly selected researchers were found to work in the fields of human genome sequencing, image analysis, nano particles, and pharmacology. Note that these individuals were located on the outskirts of the main graph. To further assess completeness of the network, we compared results with faculty rosters of 5 major neuroimaging institutes (Table 1).
+
 
 \begin{figure}[h!]
-  \includegraphics[width=.47\textwidth]{centrality_plot}
+  \includegraphics[width=.47\textwidth]{neuroimaging-500}
   \caption{\label{centfig}
-  Whole brain maps of binarized and weighted degree centrality calculated with a correlation threshold of $\rho\geq0.6$ (a-b) 
-  and sparsity threshold of 0.1\% (c-d) and binarized and weighted lFCD calculated with a correlation threshold of $\rho\geq0.6$ (e-f) 
-  averaged across maps calculated the first resting state scan of the first scanning session for all 36 participants' data from the IBATRT data. }
-\end{figure}
+  Coauthorship network for the field of neuroimaging. Each disk represent a single researcher with its radius encoding log10(Nc), where Nc is the number of citations. Edges stand for a binary relation of coauthorship between two researchers.}
+\end{figure} 
+
 
 # Conclusions
-Optimized versions of lFCD and DC achieved 4$\times$ to 30$\times$ decreases in computation time compared to C-PAC's Python implementation and decreased the memory footprint to less than 1 gigabyte. These improvements will dramatically increase the size of Connectomes analyses that can be performed using conventional workstations. Making this implementation available through AFNI ensures that it will be available to a wide range of neuroimaging researchers who do not have the wherewithal to implement these algorithms themselves.
+Accuracy results suggest a sufficient number of individuals are registered through GS to make it a useful platform of discovery. Meticulous inspection of the grouping suggest that communities typically embed either a geographical or a topical component, that is to say, certain communities are seemingly brought together by either proximity or similarity of interest. With the increasing complexity of science, finding accurate and relevant information on specific topics is a challenging task.  We feel that a better appreciation of the wealth and variety of opinions within scientific communities may help enforcing the notion that grand claims require grand evidence.
+
